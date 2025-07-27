@@ -31,12 +31,12 @@ const seedDB=async ()=>{
       },
         images: [
     {
-      url: 'https://res.cloudinary.com/dlwjselga/image/upload/v1752578751/YelpCamp/vfp239rpm4kmbdcanjnk.png',
+      url: 'https://res.cloudinary.com/dlwjselga/image/upload/v1753629390/image_qcdkrg.jpg',
       filename: 'YelpCamp/vfp239rpm4kmbdcanjnk',
       
     },
     {
-      url: 'https://res.cloudinary.com/dlwjselga/image/upload/v1752578752/YelpCamp/rlduojgcblycgrghowfi.png',
+      url: 'https://res.cloudinary.com/dlwjselga/image/upload/v1753629392/nearme_under50_ngeevs_utfafi.webp',
       filename: 'YelpCamp/rlduojgcblycgrghowfi',
     }
   ],
