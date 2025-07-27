@@ -1,8 +1,10 @@
-if(process.env.NODE_ENV!=="production"){
-    require('dotenv').config();
-}
+// if(process.env.NODE_ENV!=="production"){
+//     require('dotenv').config();
+// }
+ require('dotenv').config();
 const express=require('express')
 const app=express();
+app.set('query parser', 'extended');
 const path=require('path');
 const mongoose=require('mongoose');
 const ejsMate=require('ejs-mate');
@@ -18,6 +20,8 @@ const flash=require('connect-flash')
 const passport=require('passport');
 const LocalStrategy=require('passport-local')
 const User=require('./models/user.js')
+const sanitizeV5 = require('./utils/mongoSanitizeV5.js');
+const helmet=require('helmet');
 mongoose.connect('mongodb://localhost:27017/yelp-camp');
 
 const db = mongoose.connection;
@@ -26,11 +30,13 @@ db.once("open", () => {
     console.log("Database connected");
 });
 const sessionConfig={
+    name:'session',
     secret: 'thisshouldbeabettersecret',
     resave:false,
     saveUninitialized:true,
     cookie:{
         httpOnly:true,
+        //secure:true,
         expires:Date.now()+1000*60*60*24*7,
         maxAge:1000*60*60*24*7
     }
@@ -54,9 +60,60 @@ app.use(methodOverride('_method'));
 
 app.use(express.static(path.join(__dirname,'public')))
 
+app.use(sanitizeV5({ replaceWith: '_' }));
+app.use(flash());
+app.use(helmet());
+const scriptSrcUrls = [
+    "https://stackpath.bootstrapcdn.com/",
+    // "https://api.tiles.mapbox.com/",
+    // "https://api.mapbox.com/",
+    "https://kit.fontawesome.com/",
+    "https://cdnjs.cloudflare.com/",
+    "https://cdn.jsdelivr.net",
+    "https://cdn.maptiler.com/", // add this
+];
+const styleSrcUrls = [
+    "https://kit-free.fontawesome.com/",
+    "https://stackpath.bootstrapcdn.com/",
+    // "https://api.mapbox.com/",
+    // "https://api.tiles.mapbox.com/",
+    "https://fonts.googleapis.com/",
+    "https://use.fontawesome.com/",
+    "https://cdn.jsdelivr.net",
+    "https://cdn.maptiler.com/", // add this
+];
+const connectSrcUrls = [
+    // "https://api.mapbox.com/",
+    // "https://a.tiles.mapbox.com/",
+    // "https://b.tiles.mapbox.com/",
+    // "https://events.mapbox.com/",
+    "https://api.maptiler.com/", // add this
+];
+const fontSrcUrls = [];
+app.use(
+    helmet.contentSecurityPolicy({
+        directives: {
+            defaultSrc: [],
+            connectSrc: ["'self'", ...connectSrcUrls],
+            scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+            styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+            workerSrc: ["'self'", "blob:"],
+            objectSrc: [],
+            imgSrc: [
+                "'self'",
+                "blob:",
+                "data:",
+                "https://res.cloudinary.com/dlwjselga/", 
+                "https://images.unsplash.com/",
+                "https://api.maptiler.com/",
+            ],
+            fontSrc: ["'self'", ...fontSrcUrls],
+        },
+    })
+);
 
-app.use(flash())
 app.use((req,res,next)=>{
+    console.log(req.query)
     res.locals.currentUser = req.user;
     res.locals.success=req.flash('success');
     res.locals.error=req.flash('error');
