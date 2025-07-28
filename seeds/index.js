@@ -1,11 +1,23 @@
+require('dotenv').config();
 const mongoose=require('mongoose');
 const Campground = require('../models/campground');
 const Review = require('../models/review');
 const cities=require('./cities')
 const {places,descriptors}=require('./seedHelpers');
-mongoose.connect('mongodb://localhost:27017/yelp-camp');
+console.log('Mongo URI:', process.env.DATABASE_URL);
+mongoose.connect(process.env.DATABASE_URL)
+.then(() => console.log("MongoDB connected"))
+.catch((err) => console.error("MongoDB connection failed:", err));
 
+const MongoDBStore = require("connect-mongo")(session);
+const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
 
+mongoose.connect(dbUrl, {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false
+});
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", () => {
@@ -19,7 +31,7 @@ const seedDB=async ()=>{
     const random1000=Math.floor(Math.random()*1000);
     const price=Math.floor(Math.random()*20)+10;
     const camp=new Campground({
-        author:'6876455df3788fe558ca5524',
+        author:'68870ffe8788b581aeee5715',
         location:`${cities[random1000].city},${cities[random1000].state}`,
         title:`${sample(descriptors)} ${sample(places)}`,
         geometry: {
