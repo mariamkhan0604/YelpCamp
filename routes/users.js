@@ -12,7 +12,11 @@ router.route('/register')
 
 router.route('/login')    
     .get(users.renderLoginForm)
-    .post(storeReturnTo, passport.authenticate('local',{failureFlash:true,failureRedirect:'/login'}),users.login)
+    .post(storeReturnTo,  passport.authenticate('local', { failureFlash: true, failureRedirect: '/login' }),
+  (req, res) => {
+    console.log("SESSION AFTER LOGIN:", req.session); // ✅
+    res.redirect(req.session.returnTo || '/campgrounds');
+  });
 
 router.get('/logout', users.logout);
 module.exports=router;

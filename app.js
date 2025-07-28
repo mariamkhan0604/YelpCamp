@@ -5,6 +5,9 @@ require('dotenv').config();
 console.log("DATABASE_URL from .env:", process.env.DATABASE_URL);
 const express=require('express')
 const app=express();
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1); 
+}
 app.set('query parser', 'extended');
 const path=require('path');
 const mongoose=require('mongoose');
@@ -33,7 +36,7 @@ const store = MongoDBStore.create({
     collectionName: 'sessions',
     touchAfter: 24 * 60 * 60,
     crypto: {
-        secret: process.env.SECRET
+        secret: process.env.SESSION_SECRET
     }
 });
 
@@ -51,17 +54,18 @@ const sessionConfig = {
     name: 'session',
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
-    cookie: {
-        httpOnly: true,
-        secure: true, // only if you're on HTTPS
-        sameSite: 'lax',
-        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-        maxAge: 1000 * 60 * 60 * 24 * 7
-    }
+    saveUninitialized: false,
+       cookie: {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production', 
+  sameSite: 'lax',
+  maxAge: 1000 * 60 * 60 * 24 * 7
+}
+
+
 };
 
-app.use(session(sessionConfig))
+app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
