@@ -28,34 +28,39 @@ mongoose.connect(process.env.DATABASE_URL)
 console.log("Mongoose trying to connect to:", process.env.DATABASE_URL);
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", () => {
-    console.log("Database connected");
-    const secret = process.env.SECRET; 
-const store = new MongoDBStore({
-    mongooseConnection: db,
-    collection: 'sessions',
-    secret: secret,
-    touchAfter: 24 * 60 * 60
-});
-store.on("error", function (e) {
-    console.log("SESSION STORE ERROR",e)
-})
+const store = MongoDBStore.create({
+    mongoUrl: process.env.DATABASE_URL,
+    collectionName: 'sessions',
+    touchAfter: 24 * 60 * 60,
+    crypto: {
+        secret: process.env.SECRET
+    }
 });
 
-const sessionConfig={
+store.on("error", function (e) {
+    console.log("SESSION STORE ERROR", e)
+});
+
+db.once("open", () => {
+    console.log("Database connected");
+});
+
+
+const sessionConfig = {
     store,
-    name:'session',
-    secret: process.env.SESSION_SECRET ,
-    resave:false,
-    saveUninitialized:true,
-    cookie:{
-        httpOnly:true,
-        secure:true, 
+    name: 'session',
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        httpOnly: true,
+        secure: true, // only if you're on HTTPS
         sameSite: 'lax',
-        expires:Date.now()+1000*60*60*24*7,
-        maxAge:1000*60*60*24*7
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7
     }
-}
+};
+
 app.use(session(sessionConfig))
 app.use(passport.initialize());
 app.use(passport.session());
