@@ -33,8 +33,7 @@ db.once("open", () => {
 });
 const secret = process.env.SECRET; 
 const store = new MongoDBStore({
-    url: process.env.DATABASE_URL, 
-    databaseName: 'yelp-camp',
+    mongooseConnection: mongoose.connection,
     collection: 'sessions',
     secret: secret,
     touchAfter: 24 * 60 * 60
